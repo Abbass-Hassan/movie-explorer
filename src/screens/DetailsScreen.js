@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { COLORS } from '../constants/colors';
 import { FONT_SIZES } from '../constants/typography';
 import { SPACING } from '../constants/spacing';
 import { getMovieById } from '../api/movieApi';
@@ -21,6 +20,7 @@ import ErrorScreen from '../components/common/ErrorScreen';
 import ScreenHeader from '../components/common/ScreenHeader';
 import MovieHeroSection from '../components/movie/MovieHeroSection';
 import TabBar from '../components/common/TabBar';
+import { useTheme } from '../context/ThemeContext';
 
 const TABS = [
   { key: 'about', label: 'About Movie' },
@@ -179,6 +179,9 @@ const DetailsScreen = () => {
     return <ErrorScreen message={error} onRetry={fetchDetails} />;
   }
 
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScreenHeader
@@ -220,45 +223,46 @@ const DetailsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  contentContainer: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xxxl,
-  },
-  description: {
-    color: COLORS.textSecondary,
-    fontSize: FONT_SIZES.md,
-    lineHeight: FONT_SIZES.md * 1.6,
-  },
-  errorContainerInline: {
-    alignItems: 'center',
-  },
-  errorText: {
-    color: COLORS.error,
-    fontSize: FONT_SIZES.md,
-    marginBottom: SPACING.lg,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: SPACING.md,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.sm,
-  },
-  retryText: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    contentContainer: {
+      paddingHorizontal: SPACING.lg,
+      paddingTop: SPACING.md,
+      paddingBottom: SPACING.xxxl,
+    },
+    description: {
+      color: colors.textSecondary,
+      fontSize: FONT_SIZES.md,
+      lineHeight: FONT_SIZES.md * 1.6,
+    },
+    errorContainerInline: {
+      alignItems: 'center',
+    },
+    errorText: {
+      color: colors.error,
+      fontSize: FONT_SIZES.md,
+      marginBottom: SPACING.lg,
+      textAlign: 'center',
+    },
+    retryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: SPACING.md,
+      paddingHorizontal: SPACING.xl,
+      paddingVertical: SPACING.sm,
+    },
+    retryText: {
+      color: colors.text,
+      fontSize: FONT_SIZES.md,
+      fontWeight: '600',
+    },
+  });
 
 export default DetailsScreen;

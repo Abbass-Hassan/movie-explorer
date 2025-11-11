@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,10 @@ import {
   ScrollView,
   StatusBar,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { COLORS } from '../constants/colors';
 import { FONT_SIZES } from '../constants/typography';
 import { SPACING } from '../constants/spacing';
 import { getAllMovies } from '../api/movieApi';
@@ -27,7 +27,9 @@ import CategoryTabs from '../components/common/CategoryTabs';
 import LoadingScreen from '../components/common/LoadingScreen';
 import ErrorScreen from '../components/common/ErrorScreen';
 import EmptyState from '../components/common/EmptyState';
-import { globalStyles, CARD_WIDTH } from '../styles/globalStyles';
+import { createGlobalStyles, CARD_WIDTH } from '../styles/globalStyles';
+import { useTheme } from '../context/ThemeContext';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const CATEGORY_TABS = [
   { key: 'nowPlaying', label: 'Now playing' },
@@ -39,6 +41,7 @@ const CATEGORY_TABS = [
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { isFavorite } = useFavorites();
+  const { colors, toggleTheme, isDark } = useTheme();
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -160,6 +163,9 @@ const HomeScreen = () => {
     [],
   );
 
+  const globalStyles = useMemo(() => createGlobalStyles(colors), [colors]);
+  const themedStyles = useMemo(() => createStyles(colors), [colors]);
+
   if (loading && !refreshing) {
     return <LoadingScreen />;
   }
@@ -170,7 +176,7 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={globalStyles.safeArea}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <ScrollView
         style={globalStyles.container}
         contentContainerStyle={globalStyles.contentContainer}
@@ -179,13 +185,27 @@ const HomeScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={COLORS.primary}
+            tintColor={colors.primary}
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.heading}>What do you want to watch?</Text>
+        <View style={themedStyles.header}>
+          <View style={themedStyles.headingRow}>
+            <Text style={themedStyles.heading}>What do you want to watch?</Text>
+            <TouchableOpacity
+              style={themedStyles.themeToggle}
+              onPress={toggleTheme}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle theme"
+            >
+              <Ionicons
+                name={isDark ? 'sunny-outline' : 'moon-outline'}
+                size={20}
+                color={colors.text}
+              />
+            </TouchableOpacity>
+          </View>
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -196,15 +216,17 @@ const HomeScreen = () => {
 
         {!searchQuery.trim() && (
           <>
-            <View style={styles.featuredSection}>
+            <View style={themedStyles.featuredSection}>
               <FlatList
                 data={featuredMovies}
                 horizontal
                 keyExtractor={keyExtractor}
                 renderItem={renderFeaturedMovie}
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.featuredContent}
-                ItemSeparatorComponent={() => <View style={styles.featuredSpacer} />}
+                contentContainerStyle={themedStyles.featuredContent}
+                ItemSeparatorComponent={() => (
+                  <View style={themedStyles.featuredSpacer} />
+                )}
                 ListEmptyComponent={
                   <EmptyState message="No featured movies." />
                 }
@@ -220,8 +242,8 @@ const HomeScreen = () => {
         )}
 
         {searchQuery.trim() && (
-          <View style={styles.searchResultsHeader}>
-            <Text style={styles.searchResultsTitle}>
+          <View style={themedStyles.searchResultsHeader}>
+            <Text style={themedStyles.searchResultsTitle}>
               Search Results ({filteredMovies.length})
             </Text>
           </View>
@@ -253,39 +275,55 @@ const HomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  header: {
-    backgroundColor: COLORS.background,
-    paddingTop: SPACING.lg,
-    paddingBottom: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.xl,
-    zIndex: 10,
-  },
-  heading: {
-    fontSize: FONT_SIZES.xxl,
-    color: COLORS.text,
-    fontWeight: '700',
-    marginBottom: SPACING.lg,
-  },
-  featuredSection: {
-    marginBottom: SPACING.xl,
-    paddingBottom: SPACING.lg,
-  },
-  featuredContent: {
-    paddingHorizontal: SPACING.lg,
-  },
-  featuredSpacer: {
-    width: SPACING.lg,
-  },
-  searchResultsHeader: {
-    marginBottom: SPACING.md,
-  },
-  searchResultsTitle: {
-    fontSize: FONT_SIZES.lg,
-    color: COLORS.text,
-    fontWeight: '600',
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    header: {
+      backgroundColor: colors.background,
+      paddingTop: SPACING.lg,
+      paddingBottom: SPACING.lg,
+      paddingHorizontal: SPACING.lg,
+      marginBottom: SPACING.xl,
+      zIndex: 10,
+    },
+    headingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: SPACING.lg,
+    },
+    heading: {
+      fontSize: FONT_SIZES.xxl,
+      color: colors.text,
+      fontWeight: '700',
+      flex: 1,
+      marginRight: SPACING.lg,
+    },
+    themeToggle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.card,
+    },
+    featuredSection: {
+      marginBottom: SPACING.xl,
+      paddingBottom: SPACING.lg,
+    },
+    featuredContent: {
+      paddingHorizontal: SPACING.lg,
+    },
+    featuredSpacer: {
+      width: SPACING.lg,
+    },
+    searchResultsHeader: {
+      marginBottom: SPACING.md,
+    },
+    searchResultsTitle: {
+      fontSize: FONT_SIZES.lg,
+      color: colors.text,
+      fontWeight: '600',
+    },
+  });
 
 export default HomeScreen;

@@ -1,53 +1,63 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { COLORS } from '../../constants/colors';
 import { FONT_SIZES } from '../../constants/typography';
 import { SPACING } from '../../constants/spacing';
+import { useTheme } from '../../context/ThemeContext';
 
-const SearchBar = ({ value, onChangeText, placeholder = 'Search', onFocus, inputRef }) => {
+const SearchBar = ({
+  value,
+  onChangeText,
+  placeholder = 'Search',
+  onFocus,
+  inputRef,
+}) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
+      <Ionicons
+        name="search"
+        size={20}
+        color={colors.textSecondary}
+        style={styles.icon}
+      />
       <TextInput
         ref={inputRef}
         style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor={COLORS.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={value}
         onChangeText={onChangeText}
         onFocus={onFocus}
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <Ionicons
-        name="search"
-        size={20}
-        color={COLORS.textSecondary}
-        style={styles.icon}
-      />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: SPACING.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-  },
-  input: {
-    flex: 1,
-    color: COLORS.text,
-    fontSize: FONT_SIZES.md,
-    paddingVertical: SPACING.xs,
-  },
-  icon: {
-    marginLeft: SPACING.xs,
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: SPACING.md,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      fontSize: FONT_SIZES.md,
+      paddingVertical: SPACING.xs,
+    },
+    icon: {
+      marginRight: SPACING.sm,
+    },
+  });
 
 export default SearchBar;
 

@@ -1,20 +1,19 @@
-import { COLORS } from '../constants/colors';
-
 export const defaultScreenOptions = {
   headerShown: false,
 };
 
-export const tabBarOptions = {
+export const createTabBarOptions = (colors) => ({
   headerShown: false,
   tabBarStyle: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
+    borderTopColor: colors.surface,
   },
-  tabBarActiveTintColor: COLORS.primary,
-  tabBarInactiveTintColor: COLORS.textSecondary,
+  tabBarActiveTintColor: colors.primary,
+  tabBarInactiveTintColor: colors.textSecondary,
   tabBarLabelStyle: {
     fontSize: 12,
   },
-};
+});
 
 export default defaultScreenOptions;
 

@@ -1,4 +1,4 @@
-export const COLORS = {
+export const DARK_COLORS = {
   primary: '#0296E5',
   background: '#242A32',
   surface: '#67686D',
@@ -23,4 +23,6 @@ export const LIGHT_COLORS = {
   success: '#00C853',
   transparent: 'transparent',
 };
+
+export const COLORS = DARK_COLORS;
 

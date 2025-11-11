@@ -10,13 +10,17 @@ import EmptyState from '../components/common/EmptyState';
 import ScreenHeader from '../components/common/ScreenHeader';
 import SearchBar from '../components/common/SearchBar';
 import FavoriteMovieCard from '../components/movie/FavoriteMovieCard';
-import { globalStyles } from '../styles/globalStyles';
+import { createGlobalStyles } from '../styles/globalStyles';
+import { useTheme } from '../context/ThemeContext';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [allMovies, setAllMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { colors } = useTheme();
+  const globalStyles = useMemo(() => createGlobalStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Fetch all movies once, then filter locally for better performance
   useEffect(() => {
@@ -120,21 +124,22 @@ const SearchScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  searchBarContainer: {
-    marginHorizontal: SPACING.lg,
-    marginTop: SPACING.md,
-    marginBottom: SPACING.sm,
-  },
-  listContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xxxl,
-  },
-  emptyStateContainer: {
-    flexGrow: 1,
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    searchBarContainer: {
+      marginHorizontal: SPACING.lg,
+      marginTop: SPACING.md,
+      marginBottom: SPACING.sm,
+    },
+    listContent: {
+      paddingHorizontal: SPACING.lg,
+      paddingTop: SPACING.md,
+      paddingBottom: SPACING.xxxl,
+    },
+    emptyStateContainer: {
+      flexGrow: 1,
+    },
+  });
 
 export default SearchScreen;
 

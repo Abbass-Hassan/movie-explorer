@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { COLORS } from '../../constants/colors';
 import { FONT_SIZES } from '../../constants/typography';
 import { SPACING } from '../../constants/spacing';
+import { useTheme } from '../../context/ThemeContext';
 
 const ScreenHeader = ({
   title,
@@ -12,11 +12,14 @@ const ScreenHeader = ({
   actionIcon,
   actionDisabled = false,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const renderBackButton = () => {
     if (typeof onBack === 'function') {
       return (
         <TouchableOpacity style={styles.button} onPress={onBack}>
-          <Ionicons name="chevron-back" size={24} color={COLORS.text} />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
       );
     }
@@ -37,7 +40,7 @@ const ScreenHeader = ({
           <Ionicons
             name={actionIcon}
             size={24}
-            color={actionDisabled ? COLORS.textSecondary : COLORS.text}
+            color={actionDisabled ? colors.textSecondary : colors.text}
           />
         )}
       </TouchableOpacity>
@@ -45,35 +48,36 @@ const ScreenHeader = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    backgroundColor: COLORS.background,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.surface,
-  },
-  button: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'center',
-  },
-  placeholder: {
-    width: 40,
-    height: 40,
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.md,
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    button: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    title: {
+      color: colors.text,
+      fontSize: FONT_SIZES.lg,
+      fontWeight: '600',
+      flex: 1,
+      textAlign: 'center',
+    },
+    placeholder: {
+      width: 40,
+      height: 40,
+    },
+  });
 
 export default ScreenHeader;
 

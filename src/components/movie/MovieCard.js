@@ -1,15 +1,17 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { COLORS } from '../../constants/colors';
+import React, { useMemo } from 'react';
+import { Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { FONT_SIZES } from '../../constants/typography';
 import { SPACING } from '../../constants/spacing';
 import { getMoviePosterUri, getMovieTitle } from '../../utils/helpers';
+import { useTheme } from '../../context/ThemeContext';
 
 const FALLBACK_POSTER = require('../../../assets/popcorn.png');
 
 const MovieCard = ({ movie, onPress, isFavorite = false, width }) => {
   const posterUri = getMoviePosterUri(movie);
   const title = getMovieTitle(movie);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const cardStyle = width ? [styles.card, { width }] : styles.card;
 
@@ -31,31 +33,32 @@ const MovieCard = ({ movie, onPress, isFavorite = false, width }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: SPACING.md,
-    padding: SPACING.xs,
-    alignItems: 'center',
-  },
-  cardFavorite: {
-    borderWidth: 2,
-    borderColor: COLORS.accent,
-    borderRadius: SPACING.md,
-  },
-  image: {
-    width: '100%',
-    aspectRatio: 2 / 3,
-    borderRadius: SPACING.md,
-    marginBottom: SPACING.sm,
-    backgroundColor: COLORS.surface,
-  },
-  title: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.sm,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    card: {
+      borderRadius: SPACING.md,
+      padding: SPACING.xs,
+      alignItems: 'center',
+    },
+    cardFavorite: {
+      borderWidth: 2,
+      borderColor: colors.accent,
+      borderRadius: SPACING.md,
+    },
+    image: {
+      width: '100%',
+      aspectRatio: 2 / 3,
+      borderRadius: SPACING.md,
+      marginBottom: SPACING.sm,
+      backgroundColor: colors.surface,
+    },
+    title: {
+      color: colors.text,
+      fontSize: FONT_SIZES.sm,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
+  });
 
 export default MovieCard;
 

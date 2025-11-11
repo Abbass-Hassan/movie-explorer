@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { COLORS } from '../../constants/colors';
 import { FONT_SIZES } from '../../constants/typography';
 import { SPACING } from '../../constants/spacing';
 import {
@@ -12,6 +11,7 @@ import {
   extractYear,
   extractDuration,
 } from '../../utils/helpers';
+import { useTheme } from '../../context/ThemeContext';
 
 const FALLBACK_POSTER = require('../../../assets/popcorn.png');
 
@@ -22,6 +22,8 @@ const FavoriteMovieCard = ({ movie, onPress, onLongPress }) => {
   const genre = buildGenres(movie);
   const year = extractYear(movie);
   const duration = extractDuration(movie);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <TouchableOpacity
@@ -40,12 +42,12 @@ const FavoriteMovieCard = ({ movie, onPress, onLongPress }) => {
           {title}
         </Text>
         <View style={styles.ratingContainer}>
-          <Ionicons name="star" size={16} color={COLORS.accent} />
+          <Ionicons name="star" size={16} color={colors.accent} />
           <Text style={styles.cardRating}>{rating}</Text>
         </View>
         {genre ? (
           <View style={styles.metaRow}>
-            <Ionicons name="bookmark" size={14} color={COLORS.textSecondary} />
+            <Ionicons name="bookmark" size={14} color={colors.textSecondary} />
             <Text style={styles.metaText}>{genre}</Text>
           </View>
         ) : null}
@@ -54,7 +56,7 @@ const FavoriteMovieCard = ({ movie, onPress, onLongPress }) => {
             <Ionicons
               name="calendar-outline"
               size={14}
-              color={COLORS.textSecondary}
+              color={colors.textSecondary}
             />
             <Text style={styles.metaText}>{year}</Text>
           </View>
@@ -64,7 +66,7 @@ const FavoriteMovieCard = ({ movie, onPress, onLongPress }) => {
             <Ionicons
               name="time-outline"
               size={14}
-              color={COLORS.textSecondary}
+              color={colors.textSecondary}
             />
             <Text style={styles.metaText}>{duration}</Text>
           </View>
@@ -74,55 +76,55 @@ const FavoriteMovieCard = ({ movie, onPress, onLongPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: 'transparent',
-    borderRadius: SPACING.md,
-    overflow: 'visible',
-    marginBottom: SPACING.lg,
-    flexDirection: 'row',
-    padding: 0,
-  },
-  poster: {
-    width: 100,
-    height: 140,
-    borderRadius: SPACING.sm,
-    backgroundColor: COLORS.surface,
-  },
-  cardContent: {
-    flex: 1,
-    paddingLeft: SPACING.md,
-    justifyContent: 'flex-start',
-  },
-  cardTitle: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    marginBottom: SPACING.xs,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
-  cardRating: {
-    color: COLORS.accent,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '500',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-    marginTop: SPACING.xs,
-  },
-  metaText: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '400',
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    card: {
+      borderRadius: SPACING.md,
+      overflow: 'visible',
+      marginBottom: SPACING.lg,
+      flexDirection: 'row',
+      padding: 0,
+    },
+    poster: {
+      width: 100,
+      height: 140,
+      borderRadius: SPACING.sm,
+      backgroundColor: colors.surface,
+    },
+    cardContent: {
+      flex: 1,
+      paddingLeft: SPACING.md,
+      justifyContent: 'flex-start',
+    },
+    cardTitle: {
+      color: colors.text,
+      fontSize: FONT_SIZES.md,
+      fontWeight: '600',
+      marginBottom: SPACING.xs,
+    },
+    ratingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: SPACING.xs,
+      marginBottom: SPACING.xs,
+    },
+    cardRating: {
+      color: colors.accent,
+      fontSize: FONT_SIZES.sm,
+      fontWeight: '500',
+    },
+    metaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: SPACING.xs,
+      marginTop: SPACING.xs,
+    },
+    metaText: {
+      color: colors.text,
+      fontSize: FONT_SIZES.sm,
+      fontWeight: '400',
+    },
+  });
 
 export default FavoriteMovieCard;
 

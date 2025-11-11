@@ -1,8 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { COLORS } from '../constants/colors';
 import { SPACING } from '../constants/spacing';
 import { useFavorites } from '../context/FavoritesContext';
 import { getMovieIdentifier } from '../utils/helpers';
@@ -10,11 +9,15 @@ import LoadingScreen from '../components/common/LoadingScreen';
 import EmptyState from '../components/common/EmptyState';
 import ScreenHeader from '../components/common/ScreenHeader';
 import FavoriteMovieCard from '../components/movie/FavoriteMovieCard';
-import { globalStyles } from '../styles/globalStyles';
+import { createGlobalStyles } from '../styles/globalStyles';
+import { useTheme } from '../context/ThemeContext';
 
 const FavoritesScreen = () => {
   const navigation = useNavigation();
   const { favorites, loading, removeFavorite, loadFavorites } = useFavorites();
+  const { colors } = useTheme();
+  const globalStyles = useMemo(() => createGlobalStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
@@ -107,7 +110,7 @@ const FavoritesScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={COLORS.primary}
+            tintColor={colors.primary}
             progressViewOffset={SPACING.md}
           />
         }
@@ -127,16 +130,17 @@ const FavoritesScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  listContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xxxl,
-  },
-  emptyStateContainer: {
-    flexGrow: 1,
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    listContent: {
+      paddingHorizontal: SPACING.lg,
+      paddingTop: SPACING.md,
+      paddingBottom: SPACING.xxxl,
+    },
+    emptyStateContainer: {
+      flexGrow: 1,
+    },
+  });
 
 export default FavoritesScreen;
 
