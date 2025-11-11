@@ -21,35 +21,51 @@ export const FavoritesProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const getMovieIdentifier = useCallback((movie) => {
+    if (!movie) return null;
+    return movie.id ?? movie.movieId ?? movie.title ?? movie.name ?? null;
+  }, []);
+
+  // Load favorites from local storage first, then sync with API
+  // API takes precedence if available, otherwise use local data
   const loadFavorites = useCallback(async () => {
-    console.log('[FavoritesContext] Loading favorites');
     setLoading(true);
     try {
       const storedFavorites = await getData(FAVORITES_STORAGE_KEY);
-      if (Array.isArray(storedFavorites)) {
-        console.log(
-          `[FavoritesContext] Loaded ${storedFavorites.length} favorites from storage`,
-        );
-        setFavorites(storedFavorites);
+      let favoritesToSet = [];
+      
+      if (Array.isArray(storedFavorites) && storedFavorites.length > 0) {
+        favoritesToSet = storedFavorites;
       }
 
-      console.log('[FavoritesContext] Fetching favorites from API');
-      const apiFavorites = await fetchFavoritesFromApi();
-      if (Array.isArray(apiFavorites)) {
-        console.log(
-          `[FavoritesContext] Loaded ${apiFavorites.length} favorites from API`,
-        );
-        setFavorites(apiFavorites);
-        await saveData(FAVORITES_STORAGE_KEY, apiFavorites);
+      try {
+        const apiFavorites = await fetchFavoritesFromApi();
+        if (Array.isArray(apiFavorites) && apiFavorites.length > 0) {
+          favoritesToSet = apiFavorites;
+        }
+      } catch (apiErr) {
       }
+
+      // Remove duplicates by identifier
+      const seen = new Set();
+      const deduplicatedFavorites = favoritesToSet.filter((item) => {
+        const identifier = getMovieIdentifier(item);
+        if (!identifier || seen.has(identifier)) {
+          return false;
+        }
+        seen.add(identifier);
+        return true;
+      });
+
+      setFavorites(deduplicatedFavorites);
+      await saveData(FAVORITES_STORAGE_KEY, deduplicatedFavorites);
       setError(null);
     } catch (err) {
-      console.error('[FavoritesContext] Failed to load favorites', err);
       setError('Failed to load favorites.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getMovieIdentifier]);
 
   useEffect(() => {
     loadFavorites();
@@ -58,61 +74,125 @@ export const FavoritesProvider = ({ children }) => {
   const addFavorite = useCallback(
     async (movie) => {
       if (!movie) {
-        console.warn('[FavoritesContext] addFavorite called with invalid movie');
-        return;
+        throw new Error('Invalid movie data');
+      }
+
+      const identifier = getMovieIdentifier(movie);
+      if (!identifier) {
+        throw new Error('Movie identifier not available');
       }
 
       try {
-        console.log(
-          `[FavoritesContext] Adding favorite movie with id: ${movie.id}`,
-        );
-        const existing = favorites.find((item) => item.id === movie.id);
-        if (existing) {
-          console.log(
-            `[FavoritesContext] Movie with id ${movie.id} is already a favorite`,
-          );
-          return;
-        }
-
         const addedMovie = await addToFavorites(movie);
-        const updatedFavorites = [...favorites, addedMovie || movie];
-        setFavorites(updatedFavorites);
-        await saveData(FAVORITES_STORAGE_KEY, updatedFavorites);
+        
+        // Use functional update to prevent duplicate favorites
+        setFavorites((currentFavorites) => {
+          const movieId = movie.id ?? movie.movieId;
+          const movieTitle = movie.title ?? movie.name;
+          
+          const existing = currentFavorites.find((item) => {
+            const itemId = item.id ?? item.movieId;
+            const itemTitle = item.title ?? item.name;
+            return (
+              (movieId && (itemId === movieId || String(itemId) === String(movieId))) ||
+              (movieTitle && (itemTitle === movieTitle || String(itemTitle) === String(movieTitle)))
+            );
+          });
+          
+          if (existing) {
+            return currentFavorites;
+          }
+          const updatedFavorites = [...currentFavorites, addedMovie || movie];
+          saveData(FAVORITES_STORAGE_KEY, updatedFavorites);
+          return updatedFavorites;
+        });
+        
         setError(null);
+        return Promise.resolve();
       } catch (err) {
-        console.error('[FavoritesContext] Failed to add favorite', err);
         setError('Failed to add favorite.');
         throw err;
       }
     },
-    [favorites],
+    [getMovieIdentifier],
   );
 
   const removeFavorite = useCallback(
-    async (id) => {
+    async (identifier) => {
+      if (!identifier) {
+        throw new Error('Invalid identifier');
+      }
+
       try {
-        console.log(`[FavoritesContext] Removing favorite with id: ${id}`);
-        await removeFromFavorites(id);
-        const updatedFavorites = favorites.filter((item) => item.id !== id);
-        setFavorites(updatedFavorites);
-        await saveData(FAVORITES_STORAGE_KEY, updatedFavorites);
+        // Find the movie to get its API id before removing from state
+        let movieToRemove = null;
+        setFavorites((currentFavorites) => {
+          movieToRemove = currentFavorites.find((item) => {
+            const itemId = item.id ?? item.movieId;
+            const itemTitle = item.title ?? item.name;
+            return (
+              itemId === identifier ||
+              itemTitle === identifier ||
+              String(itemId) === String(identifier) ||
+              String(itemTitle) === String(identifier)
+            );
+          });
+          
+          const updatedFavorites = currentFavorites.filter((item) => {
+            const itemId = item.id ?? item.movieId;
+            const itemTitle = item.title ?? item.name;
+            return !(
+              itemId === identifier ||
+              itemTitle === identifier ||
+              String(itemId) === String(identifier) ||
+              String(itemTitle) === String(identifier)
+            );
+          });
+          
+          saveData(FAVORITES_STORAGE_KEY, updatedFavorites);
+          return updatedFavorites;
+        });
+        
+        // Remove from API using the actual id (may differ from identifier used for matching)
+        if (movieToRemove) {
+          const apiId = movieToRemove.id ?? movieToRemove.movieId ?? identifier;
+          try {
+            await removeFromFavorites(apiId);
+          } catch (apiErr) {
+            // Continue even if API removal fails - local state already updated
+          }
+        }
+        
         setError(null);
+        return Promise.resolve();
       } catch (err) {
-        console.error('[FavoritesContext] Failed to remove favorite', err);
         setError('Failed to remove favorite.');
         throw err;
       }
     },
-    [favorites],
+    [getMovieIdentifier],
   );
 
+  // Check if movie is favorited by matching id/movieId or title/name
+  // Handles cases where movies might have different identifier formats
   const isFavorite = useCallback(
-    (id) => favorites.some((item) => item.id === id),
+    (identifier) => {
+      if (!identifier) return false;
+      return favorites.some((item) => {
+        const itemId = item.id ?? item.movieId;
+        const itemTitle = item.title ?? item.name;
+        return (
+          itemId === identifier ||
+          itemTitle === identifier ||
+          String(itemId) === String(identifier) ||
+          String(itemTitle) === String(identifier)
+        );
+      });
+    },
     [favorites],
   );
 
   const clearError = useCallback(() => {
-    console.log('[FavoritesContext] Clearing error');
     setError(null);
   }, []);
 
